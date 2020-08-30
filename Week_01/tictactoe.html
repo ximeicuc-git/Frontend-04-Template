@@ -1,0 +1,181 @@
+<html>
+  <head>
+    <meta charset="utf8">
+  </head>
+  <style>
+    .cell {
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      font-size: 50px;
+      line-height: 100px;
+      vertical-align: middle;
+      text-align: center;
+      background-color: green;
+      border: 1px solid #ffffff;
+    }
+  </style>
+  <body>
+    <div id="board"></div>
+  </body>
+  <script>
+    let pattern = [
+      0, 0, 0,
+      0, 0, 0,
+      0, 0, 0
+    ]
+    let color = 1
+    
+    function show () {
+      const boardEl = document.getElementById('board')
+      boardEl.innerHTML = ''
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          const cellEl = document.createElement('div')
+          cellEl.classList.add('cell')
+          cellEl.innerText = pattern[i * 3 + j] === 2 ? '❌' : pattern[i * 3 + j] === 1 ? '⭕️' : ''
+          cellEl.addEventListener('click', () => {
+            userMove(i, j)
+          })
+          boardEl.appendChild(cellEl)
+        }
+        boardEl.appendChild(document.createElement('br'))
+      }
+    }
+
+    function userMove (i, j) {
+      pattern[i * 3 +j] = color
+      if (win(pattern, color)) {
+        alert(color === 2 ? '❌赢了' : color === 1 ? '⭕️赢了' : '')
+      }
+      color = 3 - color
+      if (willWin(pattern, color)) {
+        console.log(color === 2 ? '❌将要赢了' : color === 1 ? '⭕️将要赢了' : '')
+      }
+      console.log(bestChoice(pattern, color))
+      show()
+      computerMove()
+    }
+
+    function computerMove () {
+      if (bestChoice(pattern, color).point) {
+        pattern[bestChoice(pattern, color).point[0] * 3 + bestChoice(pattern, color).point[1]] = color
+      }
+      if (win(pattern, color)) {
+        alert(color === 2 ? '❌赢了' : color === 1 ? '⭕️赢了' : '')
+      }
+      color = 3 - color
+      if (willWin(pattern, color)) {
+        console.log(color === 2 ? '❌将要赢了' : color === 1 ? '⭕️将要赢了' : '')
+      }
+      show()
+    }
+
+    function clonePattern (pattern) {
+      return Object.create(pattern)
+    }
+
+    function bestChoice (pattern, color) {
+      let p
+      if (p = willWin(pattern, color)) {
+        return {
+          point: p,
+          result: 1
+        }
+      }
+      let point = null
+      let result = -2
+      outer: for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (pattern[i * 3 + j]) {
+            continue
+          }
+          const copyPattern = clonePattern(pattern)
+          copyPattern[i * 3 + j] = color
+          const r = bestChoice(copyPattern, 3 - color).result
+          if (-r > result) {
+            result = -r
+            point = [i, j]
+          }
+          if (result === 1) {
+            break outer
+          }
+        }
+      }
+      return {
+        point,
+        result: point ? result : 0
+      }
+    }
+
+    function willWin (pattern, color) {
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (pattern[i * 3 + j])
+            continue
+          const copyPattern = clonePattern(pattern)
+          copyPattern[i * 3 + j] = color
+          if (win(copyPattern, color)) {
+            // console.log(color === 2 ? '❌将要赢了' : color === 1 ? '⭕️将要赢了' : '')
+            // console.log([i, j])
+            return [i, j]
+          }
+        }
+      }
+      return null
+    }
+
+    function win (p, c) {
+      for (let i = 0; i < 3; i++) { // 检查每一行
+        let win = true
+        for (let j = 0; j < 3; j++) {
+          if (p[i * 3 + j] !== c) {
+            win = false
+          }
+        }
+        if (win)
+          return true
+      }
+
+      for (let i = 0; i < 3; i++) { // 检查每一列
+        let win = true
+        for (let j = 0; j < 3; j++) {
+          if (p[j * 3 + i] !== c) {
+            win = false
+          }
+        }
+        if (win)
+          return true
+      }
+
+      { // 检查左至右对角线
+        let win = true
+        for (let i = 0; i < 3; i++) {
+          if (p[i * 3 + i] !== c) {
+            win = false
+          }
+        }
+        if (win)
+          return true
+      }
+
+      { // 检查右至左对角线
+        let win = true
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (i + j === 2 && p[i * 3 + j] !== c) {
+              win = false
+            }
+          }
+        }
+        if (win)
+          return true
+      }
+      return false
+    }
+
+    console.log(bestChoice(pattern, color))
+
+    show()
+  </script>
+</html>
